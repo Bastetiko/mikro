@@ -779,8 +779,10 @@ function flash() {
   setTimeout(() => f.classList.remove('active'), 90);
 }
 
-$('startBtn').addEventListener('click', startCamera);
-document.addEventListener('gesturestart', e => e.preventDefault());
+document.addEventListener('DOMContentLoaded', () => {
+  $('startBtn').addEventListener('click', startCamera);
+  document.addEventListener('gesturestart', e => e.preventDefault());
+});
 </script>
 </body>
 </html>
