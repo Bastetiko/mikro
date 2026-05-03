@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0a0a0a">
+<title>mikro. — cep mikroskobu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+:root {
+  --bg:#0a0a0a; --surface:#141414; --border:#1f1f1f;
+  --text:#e8e6e0; --muted:#6b6b6b;
+  --accent:#ffb547; --accent-dim:rgba(255,181,71,0.18);
+  --danger:#ff5e5e;
+}
+html, body {
+  height:100%; background:var(--bg); color:var(--text);
+  font-family:'JetBrains Mono', monospace; overflow:hidden;
+  user-select:none; -webkit-user-select:none;
+}
+body { display:flex; flex-direction:column; }
+
+/* === TOPBAR === */
+.topbar {
+  position:fixed; top:0; left:0; right:0; z-index:10;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:14px 16px;
+  background:linear-gradient(180deg, rgba(0,0,0,0.85), transparent);
+  font-size:10px; letter-spacing:0.12em;
+  padding-top: max(14px, env(safe-area-inset-top));
+}
+.brand { font-family:'Instrument Serif', serif; font-size:24px; font-style:italic; letter-spacing:-0.01em; }
+.brand span { color:var(--accent); }
+.readout { display:flex; gap:14px; color:var(--muted); }
+.readout b { color:var(--text); font-weight:500; }
+
+/* === STAGE === */
+.stage { position:absolute; inset:0; background:#000; overflow:hidden; }
+#video, #snapshot {
+  position:absolute; inset:0; width:100%; height:100%;
+  object-fit:cover; transform-origin:center;
+}
+#snapshot { display:none; touch-action:none; }
+.stage.review #video { display:none; }
+.stage.review #snapshot { display:block; }
+
+/* === RETICLE === */
+.reticle { position:absolute; inset:0; pointer-events:none; }
+.reticle.hidden { display:none; }
+.reticle::before, .reticle::after {
+  content:''; position:absolute; left:50%; top:50%;
+  background:var(--accent); opacity:0.5;
+}
+.reticle::before { width:1px; height:18px; transform:translate(-50%,-50%); }
+.reticle::after { width:18px; height:1px; transform:translate(-50%,-50%); }
+.reticle .corner {
+  position:absolute; width:16px; height:16px;
+  border-color:var(--accent); border-style:solid; border-width:0;
+  opacity:0.55;
+}
+.reticle .tl { top:26%; left:18%; border-top-width:1px; border-left-width:1px; }
+.reticle .tr { top:26%; right:18%; border-top-width:1px; border-right-width:1px; }
+.reticle .bl { bottom:30%; left:18%; border-bottom-width:1px; border-left-width:1px; }
+.reticle .br { bottom:30%; right:18%; border-bottom-width:1px; border-right-width:1px; }
+
+/* === SIDE READOUTS === */
+.side-readout {
+  position:fixed; top:50%; transform:translateY(-50%);
+  font-size:8px; letter-spacing:0.3em; color:var(--muted);
+  writing-mode:vertical-rl; pointer-events:none;
+}
+.side-readout.left { left:8px; }
+.side-readout.right { right:8px; transform:translateY(-50%) rotate(180deg); }
+
+/* === BOTTOM PANEL === */
+.panel {
+  position:fixed; bottom:0; left:0; right:0; z-index:10;
+  background:linear-gradient(0deg, rgba(0,0,0,0.94), rgba(0,0,0,0.4) 80%, transparent);
+  padding:14px 16px;
+  padding-bottom: max(24px, env(safe-area-inset-bottom));
+}
+.cam-row {
+  display:flex; gap:6px; justify-content:center; margin-bottom:10px;
+  flex-wrap:wrap;
+}
+.cam-row:empty { display:none; }
+.cam-chip {
+  padding:6px 12px; font-family:inherit; font-size:9px;
+  letter-spacing:0.12em; background:transparent; border:1px solid var(--border);
+  color:var(--muted); cursor:pointer; border-radius:999px;
+}
+.cam-chip.active { color:var(--accent); border-color:var(--accent); background:var(--accent-dim); }
+
+.zoom-track {
+  display:flex; align-items:center; gap:10px;
+  padding:8px 14px; background:var(--surface); border:1px solid var(--border);
+  border-radius:999px; margin-bottom:14px;
+  font-size:9px; color:var(--muted); letter-spacing:0.15em;
+}
+.zoom-track input[type=range] {
+  flex:1; -webkit-appearance:none; appearance:none; height:2px;
+  background:var(--border); outline:none;
+}
+.zoom-track input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance:none; appearance:none; width:14px; height:14px;
+  border-radius:50%; background:var(--accent); cursor:pointer;
+}
+.zoom-track input[type=range]::-moz-range-thumb {
+  width:14px; height:14px; border-radius:50%; background:var(--accent); border:none;
+}
+.zoom-val { color:var(--accent); min-width:38px; text-align:right; font-weight:500; font-size:10px; }
+
+.toggle-group { display:flex; gap:6px; flex-wrap:wrap; justify-content:center; margin-bottom:14px; }
+.chip {
+  padding:7px 11px; font-family:inherit; font-size:9px;
+  letter-spacing:0.12em; background:var(--surface); border:1px solid var(--border);
+  color:var(--muted); cursor:pointer; border-radius:2px;
+  transition:all 0.15s ease;
+}
+.chip.active { color:var(--accent); border-color:var(--accent); background:var(--accent-dim); }
+.chip:disabled { opacity:0.3; cursor:not-allowed; }
+
+.shutter-row { display:flex; align-items:center; justify-content:space-between; gap:16px; }
+.aux-btn {
+  width:50px; height:50px; border-radius:50%;
+  background:var(--surface); border:1px solid var(--border);
+  color:var(--text); display:flex; align-items:center; justify-content:center;
+  cursor:pointer; font-size:18px; font-family:inherit;
+}
+.aux-btn.active { color:var(--accent); border-color:var(--accent); }
+.aux-btn:disabled { opacity:0.3; }
+
+.shutter {
+  width:74px; height:74px; border-radius:50%;
+  border:2px solid var(--text); background:transparent;
+  position:relative; cursor:pointer;
+  transition:transform 0.1s ease;
+}
+.shutter::after {
+  content:''; position:absolute; inset:6px; border-radius:50%;
+  background:var(--text); transition:all 0.18s ease;
+}
+.shutter:active { transform:scale(0.96); }
+.shutter.capturing::after { background:var(--accent); inset:22px; border-radius:4px; }
+
+/* === REVIEW === */
+.review-actions {
+  position:fixed; bottom:0; left:0; right:0; z-index:10;
+  display:flex; justify-content:center; gap:10px;
+  padding:18px 16px;
+  padding-bottom: max(28px, env(safe-area-inset-bottom));
+  background:linear-gradient(0deg, rgba(0,0,0,0.94), transparent);
+}
+.review-actions.hidden { display:none; }
+.review-btn {
+  padding:11px 18px; background:var(--surface); border:1px solid var(--border);
+  color:var(--text); font-family:inherit; font-size:10px; letter-spacing:0.18em;
+  cursor:pointer; border-radius:2px;
+}
+.review-btn.primary { color:var(--accent); border-color:var(--accent); }
+
+/* === FLASH / TOAST === */
+.flash {
+  position:fixed; inset:0; background:white; z-index:100;
+  opacity:0; pointer-events:none; transition:opacity 0.1s ease-out;
+}
+.flash.active { opacity:0.55; }
+
+.toast {
+  position:fixed; top:50%; left:50%; transform:translate(-50%, -50%);
+  background:rgba(0,0,0,0.9); border:1px solid var(--border);
+  padding:14px 20px; font-size:10px; letter-spacing:0.15em;
+  color:var(--text); z-index:50; pointer-events:none;
+  opacity:0; transition:opacity 0.2s ease; text-align:center;
+  white-space:pre-line; min-width:180px;
+}
+.toast.show { opacity:1; }
+.stack-progress { display:flex; gap:3px; margin-top:10px; justify-content:center; }
+.stack-progress span { width:8px; height:2px; background:var(--border); }
+.stack-progress span.done { background:var(--accent); }
+
+/* === INTRO / PERMISSION === */
+.permission {
+  position:fixed; inset:0; background:var(--bg); z-index:200;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  padding:32px; text-align:center;
+}
+.permission.hidden { display:none; }
+.permission h1 {
+  font-family:'Instrument Serif', serif; font-style:italic;
+  font-size:64px; font-weight:400; line-height:1; margin-bottom:14px;
+  letter-spacing:-0.02em;
+}
+.permission h1 span { color:var(--accent); }
+.permission p {
+  color:var(--muted); font-size:11px; line-height:1.8;
+  max-width:300px; margin-bottom:32px; letter-spacing:0.04em;
+}
+.permission button {
+  padding:14px 36px; background:var(--accent); color:var(--bg);
+  border:none; font-family:inherit; font-weight:600; letter-spacing:0.18em;
+  font-size:10px; cursor:pointer; border-radius:2px;
+}
+.permission .specs {
+  margin-top:42px; font-size:8px; color:var(--muted); letter-spacing:0.25em;
+  display:flex; gap:14px; align-items:center;
+}
+.permission .specs b { color:var(--text); font-weight:500; }
+.error-box { margin-top:18px; color:var(--danger); font-size:10px; max-width:300px; line-height:1.6; }
+
+/* edge grain overlay */
+.stage::after {
+  content:''; position:absolute; inset:0; pointer-events:none;
+  background:radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.45) 100%);
+  z-index:1;
+}
+</style>
+</head>
+<body>
+
+<!-- INTRO -->
+<div class="permission" id="permission">
+  <h1>mi<span>kro</span>.</h1>
+  <p>Cep telefonunu yüksek çözünürlüklü inceleme aracına çevir. Çoklu kare yığını, merkez kırpma, sensör seviyesi kontrol.</p>
+  <button id="startBtn">KAMERAYI BAŞLAT</button>
+  <div class="specs">
+    <span>v0.1</span><span>·</span><span><b>BURST</b> stack</span><span>·</span><span><b>4K</b> capture</span>
+  </div>
+  <div class="error-box" id="errorBox"></div>
+</div>
+
+<!-- TOPBAR -->
+<div class="topbar" id="topbar" style="display:none">
+  <div class="brand">mi<span>kro</span>.</div>
+  <div class="readout">
+    <span><b id="resReadout">—</b></span>
+    <span><b id="fpsReadout">—</b></span>
+  </div>
+</div>
+
+<!-- SIDE -->
+<div class="side-readout left" id="sideL" style="display:none">SAMPLE · OPTIC</div>
+<div class="side-readout right" id="sideR" style="display:none">FRAME · BUFFER</div>
+
+<!-- STAGE -->
+<div class="stage" id="stage" style="display:none">
+  <video id="video" autoplay playsinline muted></video>
+  <canvas id="snapshot"></canvas>
+  <div class="reticle" id="reticle">
+    <span class="corner tl"></span><span class="corner tr"></span>
+    <span class="corner bl"></span><span class="corner br"></span>
+  </div>
+</div>
+
+<!-- PANEL -->
+<div class="panel" id="panel" style="display:none">
+  <div class="cam-row" id="camRow"></div>
+  <div class="zoom-track">
+    <span>ZOOM</span>
+    <input type="range" id="zoomSlider" min="1" max="8" step="0.1" value="1">
+    <span class="zoom-val" id="zoomVal">1.0x</span>
+  </div>
+  <div class="toggle-group">
+    <button class="chip" id="cropChip">MERKEZ KIRP</button>
+    <button class="chip active" id="stackChip">YIĞIN ×8</button>
+    <button class="chip" id="timerChip">2sn TİMER</button>
+    <button class="chip active" id="gridChip">RETİKÜL</button>
+  </div>
+  <div class="shutter-row">
+    <button class="aux-btn" id="torchBtn" title="Fener">⚡</button>
+    <button class="shutter" id="shutter"></button>
+    <button class="aux-btn" id="focusBtn" title="Odak">◎</button>
+  </div>
+</div>
+
+<!-- REVIEW -->
+<div class="review-actions hidden" id="reviewActions">
+  <button class="review-btn" id="discardBtn">SİL</button>
+  <button class="review-btn primary" id="saveBtn">KAYDET</button>
+  <button class="review-btn" id="againBtn">YENİ ÇEKİM</button>
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="flash" id="flash"></div>
+
+<script>
+const state = {
+  stream:null, track:null, imageCapture:null,
+  zoom:1, zoomCap:null,
+  centerCrop:false, stackSize:8, showReticle:true,
+  torchOn:false, capturing:false, mode:'live',
+  useTimer:false, motion:0,
+};
+
+const $ = id => document.getElementById(id);
+const video = $('video'), snapshot = $('snapshot'), stage = $('stage'), reticle = $('reticle');
+
+async function startCamera(deviceId = null) {
+  $('errorBox').textContent = '';
+  try {
+    // Eski stream'i kapat
+    if (state.stream) {
+      state.stream.getTracks().forEach(t => t.stop());
+    }
+
+    const videoConstraints = deviceId
+      ? { deviceId: { exact: deviceId },
+          width:{ ideal:4096 }, height:{ ideal:2160 },
+          frameRate:{ ideal:30 } }
+      : { facingMode:{ ideal:'environment' },
+          width:{ ideal:4096 }, height:{ ideal:2160 },
+          frameRate:{ ideal:30 } };
+
+    const stream = await navigator.mediaDevices.getUserMedia({
+      audio:false, video: videoConstraints
+    });
+    state.stream = stream;
+    state.track = stream.getVideoTracks()[0];
+    video.srcObject = stream;
+
+    if (typeof ImageCapture !== 'undefined') {
+      try { state.imageCapture = new ImageCapture(state.track); } catch(e){}
+    }
+
+    $('permission').classList.add('hidden');
+    ['topbar','stage','panel','sideL','sideR'].forEach(id => $(id).style.display = '');
+
+    video.addEventListener('loadedmetadata', () => {
+      const s = state.track.getSettings();
+      $('resReadout').textContent = `${s.width||'?'}×${s.height||'?'}`;
+      readTrackCaps();
+    }, { once:true });
+
+    if (!deviceId) {
+      startFpsLoop();
+      startMotionTracking();
+      // İlk açılıştan sonra kameraları listele
+      await listCameras();
+    }
+  } catch (err) {
+    $('errorBox').textContent = 'Kamera erişimi başarısız: ' + err.message + '\n\nNot: tarayıcı önizlemesi kamera erişimine izin vermiyor olabilir. Bu durumda HTML dosyasını telefonunda doğrudan aç.';
+  }
+}
+
+async function listCameras() {
+  try {
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    const cams = devices.filter(d => d.kind === 'videoinput');
+    if (cams.length <= 1) return; // tek kamera varsa seçici göstermeye gerek yok
+
+    const row = $('camRow');
+    row.innerHTML = '';
+    const currentId = state.track.getSettings().deviceId;
+
+    cams.forEach((cam, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'cam-chip' + (cam.deviceId === currentId ? ' active' : '');
+      // Etiket çoğu Android'de "camera2 0, facing back" gibi geliyor — onu kullanışlıya çevir
+      btn.textContent = guessCamLabel(cam.label, i, cams.length);
+      btn.title = cam.label;
+      btn.addEventListener('click', () => switchCamera(cam.deviceId));
+      row.appendChild(btn);
+    });
+  } catch (e) {
+    console.warn('Kamera listesi alınamadı', e);
+  }
+}
+
+function guessCamLabel(label, idx, total) {
+  const l = (label || '').toLowerCase();
+  // Yaygın etiketleri tanımaya çalış
+  if (l.includes('ultra') || l.includes('wide') && !l.includes('telephoto')) return 'GENİŞ 0.5×';
+  if (l.includes('tele')) return 'TELE 2×+';
+  if (l.includes('macro')) return 'MAKRO';
+  // Etiket yoksa pozisyona göre tahmin (Samsung/Xiaomi'de genelde: 0=ana, 1=ultra-wide, 2=tele)
+  if (total === 3) return ['ANA 1×', 'GENİŞ 0.5×', 'TELE 2×+'][idx] || `KAM ${idx+1}`;
+  if (total === 2) return ['ANA 1×', 'GENİŞ 0.5×'][idx] || `KAM ${idx+1}`;
+  return `KAM ${idx+1}`;
+}
+
+async function switchCamera(deviceId) {
+  showToast('KAMERA DEĞİŞTİRİLİYOR…', true);
+  await startCamera(deviceId);
+  // Aktif chip'i güncelle
+  document.querySelectorAll('.cam-chip').forEach(c => {
+    c.classList.toggle('active', c.title && state.track.getSettings().deviceId === [...document.querySelectorAll('.cam-chip')].find(x => x === c)?.dataset?.id);
+  });
+  await listCameras(); // yeniden çiz, doğru active state için
+  hideToast();
+}
+
+function readTrackCaps() {
+  if (!state.track || !state.track.getCapabilities) return;
+  const caps = state.track.getCapabilities();
+  if (!caps.torch) $('torchBtn').disabled = true;
+  if (caps.zoom) {
+    state.zoomCap = caps.zoom;
+    const slider = $('zoomSlider');
+    slider.min = caps.zoom.min;
+    slider.max = Math.min(caps.zoom.max, 10);
+    slider.step = caps.zoom.step || 0.1;
+    slider.value = 1;
+  }
+  if (!caps.focusMode) $('focusBtn').disabled = true;
+}
+
+let frames = 0, lastTime = performance.now();
+function startFpsLoop() {
+  function tick() {
+    frames++;
+    const now = performance.now();
+    if (now - lastTime >= 1000) {
+      $('fpsReadout').textContent = `${frames} fps`;
+      frames = 0; lastTime = now;
+    }
+    requestAnimationFrame(tick);
+  }
+  tick();
+}
+
+// ZOOM
+$('zoomSlider').addEventListener('input', e => {
+  const z = parseFloat(e.target.value);
+  state.zoom = z;
+  $('zoomVal').textContent = z.toFixed(1) + 'x';
+  if (state.zoomCap && state.track) {
+    state.track.applyConstraints({ advanced:[{ zoom: z }] }).catch(()=>{
+      video.style.transform = `scale(${z})`;
+    });
+  } else {
+    video.style.transform = `scale(${z})`;
+  }
+});
+
+// CENTER CROP
+$('cropChip').addEventListener('click', () => {
+  state.centerCrop = !state.centerCrop;
+  $('cropChip').classList.toggle('active', state.centerCrop);
+  if (state.centerCrop) showToast('MERKEZ KIRPMA AÇIK\nGeniş açı lensler için');
+});
+
+// STACK SIZE
+$('stackChip').addEventListener('click', () => {
+  const sizes = [1, 4, 8, 16, 24];
+  const i = sizes.indexOf(state.stackSize);
+  state.stackSize = sizes[(i + 1) % sizes.length];
+  $('stackChip').textContent = state.stackSize === 1 ? 'TEK KARE' : `YIĞIN ×${state.stackSize}`;
+  $('stackChip').classList.toggle('active', state.stackSize > 1);
+});
+
+// RETICLE
+$('gridChip').addEventListener('click', () => {
+  state.showReticle = !state.showReticle;
+  reticle.classList.toggle('hidden', !state.showReticle);
+  $('gridChip').classList.toggle('active', state.showReticle);
+});
+
+// TORCH
+$('torchBtn').addEventListener('click', async () => {
+  if (!state.track) return;
+  state.torchOn = !state.torchOn;
+  try {
+    await state.track.applyConstraints({ advanced:[{ torch: state.torchOn }] });
+    $('torchBtn').classList.toggle('active', state.torchOn);
+  } catch (e) {
+    showToast('Bu cihaz fener kontrolünü desteklemiyor');
+    state.torchOn = false;
+  }
+});
+
+// FOCUS LOCK — önce mevcut odağı oku, sonra kilitle
+let focusLocked = false;
+$('focusBtn').addEventListener('click', async () => {
+  if (!state.track) return;
+  const caps = state.track.getCapabilities();
+  if (!caps.focusMode) { showToast('Manuel odak desteklenmiyor'); return; }
+  focusLocked = !focusLocked;
+  try {
+    if (focusLocked) {
+      // 1) Mevcut odak mesafesini oku (auto-focus'un bulduğu nokta)
+      const settings = state.track.getSettings();
+      const currentDistance = settings.focusDistance;
+      // 2) Manuel moda geç ve AYNI mesafeyi sabitle
+      const constraints = { focusMode: 'manual' };
+      if (currentDistance != null && caps.focusDistance) {
+        constraints.focusDistance = currentDistance;
+      }
+      await state.track.applyConstraints({ advanced:[constraints] });
+      showToast(currentDistance != null
+        ? `ODAK KİLİTLENDİ\n${currentDistance.toFixed(2)}`
+        : 'ODAK KİLİTLENDİ');
+    } else {
+      await state.track.applyConstraints({ advanced:[{ focusMode: 'continuous' }] });
+      showToast('OTOMATİK ODAK');
+    }
+    $('focusBtn').classList.toggle('active', focusLocked);
+  } catch (e) {
+    showToast('Odak ayarı uygulanamadı');
+    focusLocked = !focusLocked;
+    $('focusBtn').classList.toggle('active', focusLocked);
+  }
+});
+
+// TAP TO FOCUS POINT
+stage.addEventListener('click', async (e) => {
+  if (state.mode !== 'live' || !state.track) return;
+  const caps = state.track.getCapabilities();
+  if (!caps.pointsOfInterest) return;
+  try {
+    const x = e.clientX / window.innerWidth;
+    const y = e.clientY / window.innerHeight;
+    await state.track.applyConstraints({
+      advanced:[{ pointsOfInterest:[{x, y}] }]
+    });
+  } catch (err) {}
+});
+
+// TIMER
+$('timerChip').addEventListener('click', () => {
+  state.useTimer = !state.useTimer;
+  $('timerChip').classList.toggle('active', state.useTimer);
+});
+
+// MOTION SENSOR — telefon ne kadar titriyor?
+let motionSamples = [];
+function startMotionTracking() {
+  const handler = (e) => {
+    const a = e.accelerationIncludingGravity || e.acceleration;
+    if (!a) return;
+    motionSamples.push({ t: performance.now(), x:a.x||0, y:a.y||0, z:a.z||0 });
+    if (motionSamples.length > 30) motionSamples.shift();
+    // son 500ms'lik delta varyansını al
+    const recent = motionSamples.filter(s => performance.now() - s.t < 500);
+    if (recent.length < 2) { state.motion = 0; return; }
+    let dSum = 0;
+    for (let i = 1; i < recent.length; i++) {
+      const dx = recent[i].x - recent[i-1].x;
+      const dy = recent[i].y - recent[i-1].y;
+      const dz = recent[i].z - recent[i-1].z;
+      dSum += Math.sqrt(dx*dx + dy*dy + dz*dz);
+    }
+    state.motion = dSum / recent.length;
+  };
+  if (typeof DeviceMotionEvent !== 'undefined') {
+    if (typeof DeviceMotionEvent.requestPermission === 'function') {
+      // iOS 13+
+      DeviceMotionEvent.requestPermission().then(p => {
+        if (p === 'granted') window.addEventListener('devicemotion', handler);
+      }).catch(()=>{});
+    } else {
+      window.addEventListener('devicemotion', handler);
+    }
+  }
+}
+
+// Stabil olmasını bekle (ya da timeout)
+async function waitForStability(maxWaitMs = 1500, threshold = 0.25) {
+  const start = performance.now();
+  while (performance.now() - start < maxWaitMs) {
+    if (state.motion < threshold) return true;
+    await sleep(50);
+  }
+  return false;
+}
+
+// SHUTTER — burst stack with timer + stability check
+$('shutter').addEventListener('click', captureBurst);
+
+async function captureBurst() {
+  if (state.capturing || !state.track) return;
+  state.capturing = true;
+  $('shutter').classList.add('capturing');
+
+  // 1) Timer geri sayımı
+  if (state.useTimer) {
+    for (let i = 2; i >= 1; i--) {
+      showToast(`${i}…`, true);
+      await sleep(1000);
+    }
+  }
+
+  // 2) Stabilite bekle
+  showToast('SABİTLEN…', true);
+  const stable = await waitForStability(1500, 0.3);
+  if (!stable) {
+    showToast('UYARI: titreşim yüksek\nyine de çekiliyor', true);
+    await sleep(600);
+  }
+
+  flash();
+
+  const N = state.stackSize;
+  const W = video.videoWidth, H = video.videoHeight;
+  const sumBuf = new Float32Array(W * H * 4);
+  const tempCanvas = document.createElement('canvas');
+  tempCanvas.width = W; tempCanvas.height = H;
+  const tctx = tempCanvas.getContext('2d', { willReadFrequently:true });
+
+  showToast(`ÇEKİLİYOR · 0/${N}`, true);
+
+  // Hareket eşiğini aşan kareleri AT
+  let kept = 0, attempts = 0;
+  const maxAttempts = N * 3;
+  while (kept < N && attempts < maxAttempts) {
+    attempts++;
+    // bu kare çekildiğinde çok hareket varsa atla
+    if (state.motion > 0.6 && N > 4) {
+      await sleep(40);
+      continue;
+    }
+    let bitmap = null;
+    if (state.imageCapture && N <= 4) {
+      try { bitmap = await state.imageCapture.grabFrame(); } catch(e) {}
+    }
+    if (bitmap) {
+      tctx.drawImage(bitmap, 0, 0, W, H);
+      bitmap.close && bitmap.close();
+    } else {
+      tctx.drawImage(video, 0, 0, W, H);
+    }
+    const data = tctx.getImageData(0, 0, W, H).data;
+    for (let p = 0; p < data.length; p++) sumBuf[p] += data[p];
+    kept++;
+    updateToast(`ÇEKİLİYOR · ${kept}/${N}`, kept, N);
+    if (N > 1) await sleep(35);
+  }
+
+  const usedFrames = kept || 1;
+
+  // average
+  const out = new Uint8ClampedArray(W * H * 4);
+  for (let p = 0; p < out.length; p++) out[p] = sumBuf[p] / usedFrames;
+  tctx.putImageData(new ImageData(out, W, H), 0, 0);
+
+  // unsharp mask
+  const sharpened = unsharpMask(tctx, W, H, 0.55);
+  tctx.putImageData(sharpened, 0, 0);
+
+  // crop?
+  let outW = W, outH = H, sx=0, sy=0, sw=W, sh=H;
+  if (state.centerCrop) {
+    const f = 0.6;
+    sw = W*f; sh = H*f; sx = (W-sw)/2; sy = (H-sh)/2;
+    outW = sw; outH = sh;
+  }
+  snapshot.width = outW; snapshot.height = outH;
+  snapshot.getContext('2d').drawImage(tempCanvas, sx, sy, sw, sh, 0, 0, outW, outH);
+
+  hideToast();
+  if (kept < N) showToast(`${kept}/${N} kare kullanıldı`);
+  enterReviewMode();
+  state.capturing = false;
+  $('shutter').classList.remove('capturing');
+}
+
+function sleep(ms){ return new Promise(r=>setTimeout(r, ms)); }
+
+function unsharpMask(ctx, w, h, a) {
+  const src = ctx.getImageData(0, 0, w, h);
+  const out = new ImageData(new Uint8ClampedArray(src.data), w, h);
+  const k = [0,-a,0,  -a,1+4*a,-a,  0,-a,0];
+  const sd = src.data, od = out.data;
+  for (let y = 1; y < h-1; y++) {
+    for (let x = 1; x < w-1; x++) {
+      const i = (y*w + x) * 4;
+      for (let c = 0; c < 3; c++) {
+        let sum = 0, idx = 0;
+        for (let ky = -1; ky <= 1; ky++)
+          for (let kx = -1; kx <= 1; kx++)
+            sum += sd[((y+ky)*w + (x+kx))*4 + c] * k[idx++];
+        od[i+c] = sum < 0 ? 0 : sum > 255 ? 255 : sum;
+      }
+    }
+  }
+  return out;
+}
+
+// REVIEW MODE
+function enterReviewMode() {
+  state.mode = 'review';
+  stage.classList.add('review');
+  $('panel').style.display = 'none';
+  $('reviewActions').classList.remove('hidden');
+  reticle.classList.add('hidden');
+  initPinchZoom();
+}
+function exitReviewMode() {
+  state.mode = 'live';
+  stage.classList.remove('review');
+  $('panel').style.display = '';
+  $('reviewActions').classList.add('hidden');
+  if (state.showReticle) reticle.classList.remove('hidden');
+  snapshot.style.transform = '';
+}
+
+$('againBtn').addEventListener('click', exitReviewMode);
+$('discardBtn').addEventListener('click', exitReviewMode);
+$('saveBtn').addEventListener('click', () => {
+  snapshot.toBlob(blob => {
+    const a = document.createElement('a');
+    a.download = `mikro_${Date.now()}.png`;
+    a.href = URL.createObjectURL(blob);
+    a.click();
+    showToast('KAYDEDİLDİ');
+  }, 'image/png');
+});
+
+function initPinchZoom() {
+  let scale = 1, posX = 0, posY = 0;
+  let startDist = 0, startScale = 1;
+  let startX = 0, startY = 0, startPosX = 0, startPosY = 0;
+  let isPinching = false, isPanning = false;
+  function apply() {
+    snapshot.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`;
+  }
+  snapshot.addEventListener('touchstart', e => {
+    if (e.touches.length === 2) {
+      isPinching = true; isPanning = false;
+      startDist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      startScale = scale;
+    } else if (e.touches.length === 1) {
+      isPanning = true; isPinching = false;
+      startX = e.touches[0].clientX; startY = e.touches[0].clientY;
+      startPosX = posX; startPosY = posY;
+    }
+  }, { passive:true });
+  snapshot.addEventListener('touchmove', e => {
+    if (isPinching && e.touches.length === 2) {
+      const dist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      scale = Math.max(1, Math.min(10, startScale * (dist / startDist)));
+      apply();
+    } else if (isPanning && e.touches.length === 1) {
+      posX = startPosX + (e.touches[0].clientX - startX);
+      posY = startPosY + (e.touches[0].clientY - startY);
+      apply();
+    }
+  }, { passive:true });
+  snapshot.addEventListener('touchend', () => {
+    isPinching = false; isPanning = false;
+    if (scale === 1) { posX = 0; posY = 0; apply(); }
+  });
+  let lastTap = 0;
+  snapshot.addEventListener('touchend', e => {
+    const now = Date.now();
+    if (now - lastTap < 300) {
+      scale = scale > 1 ? 1 : 3;
+      posX = 0; posY = 0; apply();
+    }
+    lastTap = now;
+  });
+}
+
+// helpers
+let toastTimer;
+function showToast(text, sticky = false) {
+  const t = $('toast');
+  t.textContent = text; t.classList.add('show');
+  clearTimeout(toastTimer);
+  if (!sticky) toastTimer = setTimeout(()=>t.classList.remove('show'), 1600);
+}
+function updateToast(text, done, total) {
+  const t = $('toast');
+  let dots = '';
+  for (let i = 0; i < total; i++) dots += `<span class="${i<done?'done':''}"></span>`;
+  t.innerHTML = `${text}<div class="stack-progress">${dots}</div>`;
+}
+function hideToast() { $('toast').classList.remove('show'); }
+function flash() {
+  const f = $('flash'); f.classList.add('active');
+  setTimeout(() => f.classList.remove('active'), 90);
+}
+
+$('startBtn').addEventListener('click', startCamera);
+document.addEventListener('gesturestart', e => e.preventDefault());
+</script>
+</body>
+</html>
