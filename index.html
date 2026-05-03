@@ -22,7 +22,7 @@ html, body {
   user-select:none; -webkit-user-select:none;
 }
 body { display:flex; flex-direction:column; }
-
+ 
 /* === TOPBAR === */
 .topbar {
   position:fixed; top:0; left:0; right:0; z-index:10;
@@ -36,7 +36,7 @@ body { display:flex; flex-direction:column; }
 .brand span { color:var(--accent); }
 .readout { display:flex; gap:14px; color:var(--muted); }
 .readout b { color:var(--text); font-weight:500; }
-
+ 
 /* === STAGE === */
 .stage { position:absolute; inset:0; background:#000; overflow:hidden; }
 #video, #snapshot {
@@ -46,7 +46,7 @@ body { display:flex; flex-direction:column; }
 #snapshot { display:none; touch-action:none; }
 .stage.review #video { display:none; }
 .stage.review #snapshot { display:block; }
-
+ 
 /* === RETICLE === */
 .reticle { position:absolute; inset:0; pointer-events:none; }
 .reticle.hidden { display:none; }
@@ -65,7 +65,7 @@ body { display:flex; flex-direction:column; }
 .reticle .tr { top:26%; right:18%; border-top-width:1px; border-right-width:1px; }
 .reticle .bl { bottom:30%; left:18%; border-bottom-width:1px; border-left-width:1px; }
 .reticle .br { bottom:30%; right:18%; border-bottom-width:1px; border-right-width:1px; }
-
+ 
 /* === SIDE READOUTS === */
 .side-readout {
   position:fixed; top:50%; transform:translateY(-50%);
@@ -74,7 +74,7 @@ body { display:flex; flex-direction:column; }
 }
 .side-readout.left { left:8px; }
 .side-readout.right { right:8px; transform:translateY(-50%) rotate(180deg); }
-
+ 
 /* === BOTTOM PANEL === */
 .panel {
   position:fixed; bottom:0; left:0; right:0; z-index:10;
@@ -93,7 +93,7 @@ body { display:flex; flex-direction:column; }
   color:var(--muted); cursor:pointer; border-radius:999px;
 }
 .cam-chip.active { color:var(--accent); border-color:var(--accent); background:var(--accent-dim); }
-
+ 
 .zoom-track {
   display:flex; align-items:center; gap:10px;
   padding:8px 14px; background:var(--surface); border:1px solid var(--border);
@@ -112,7 +112,7 @@ body { display:flex; flex-direction:column; }
   width:14px; height:14px; border-radius:50%; background:var(--accent); border:none;
 }
 .zoom-val { color:var(--accent); min-width:38px; text-align:right; font-weight:500; font-size:10px; }
-
+ 
 .toggle-group { display:flex; gap:6px; flex-wrap:wrap; justify-content:center; margin-bottom:14px; }
 .chip {
   padding:7px 11px; font-family:inherit; font-size:9px;
@@ -122,7 +122,7 @@ body { display:flex; flex-direction:column; }
 }
 .chip.active { color:var(--accent); border-color:var(--accent); background:var(--accent-dim); }
 .chip:disabled { opacity:0.3; cursor:not-allowed; }
-
+ 
 .shutter-row { display:flex; align-items:center; justify-content:space-between; gap:16px; }
 .aux-btn {
   width:50px; height:50px; border-radius:50%;
@@ -132,7 +132,7 @@ body { display:flex; flex-direction:column; }
 }
 .aux-btn.active { color:var(--accent); border-color:var(--accent); }
 .aux-btn:disabled { opacity:0.3; }
-
+ 
 .shutter {
   width:74px; height:74px; border-radius:50%;
   border:2px solid var(--text); background:transparent;
@@ -145,7 +145,7 @@ body { display:flex; flex-direction:column; }
 }
 .shutter:active { transform:scale(0.96); }
 .shutter.capturing::after { background:var(--accent); inset:22px; border-radius:4px; }
-
+ 
 /* === REVIEW === */
 .review-actions {
   position:fixed; bottom:0; left:0; right:0; z-index:10;
@@ -161,14 +161,14 @@ body { display:flex; flex-direction:column; }
   cursor:pointer; border-radius:2px;
 }
 .review-btn.primary { color:var(--accent); border-color:var(--accent); }
-
+ 
 /* === FLASH / TOAST === */
 .flash {
   position:fixed; inset:0; background:white; z-index:100;
   opacity:0; pointer-events:none; transition:opacity 0.1s ease-out;
 }
 .flash.active { opacity:0.55; }
-
+ 
 .toast {
   position:fixed; top:50%; left:50%; transform:translate(-50%, -50%);
   background:rgba(0,0,0,0.9); border:1px solid var(--border);
@@ -181,7 +181,7 @@ body { display:flex; flex-direction:column; }
 .stack-progress { display:flex; gap:3px; margin-top:10px; justify-content:center; }
 .stack-progress span { width:8px; height:2px; background:var(--border); }
 .stack-progress span.done { background:var(--accent); }
-
+ 
 /* === INTRO / PERMISSION === */
 .permission {
   position:fixed; inset:0; background:var(--bg); z-index:200;
@@ -210,7 +210,7 @@ body { display:flex; flex-direction:column; }
 }
 .permission .specs b { color:var(--text); font-weight:500; }
 .error-box { margin-top:18px; color:var(--danger); font-size:10px; max-width:300px; line-height:1.6; }
-
+ 
 /* edge grain overlay */
 .stage::after {
   content:''; position:absolute; inset:0; pointer-events:none;
@@ -220,18 +220,18 @@ body { display:flex; flex-direction:column; }
 </style>
 </head>
 <body>
-
+ 
 <!-- INTRO -->
 <div class="permission" id="permission">
   <h1>mi<span>kro</span>.</h1>
   <p>Cep telefonunu yüksek çözünürlüklü inceleme aracına çevir. Çoklu kare yığını, merkez kırpma, sensör seviyesi kontrol.</p>
-  <button id="startBtn">KAMERAYI BAŞLAT</button>
+  <button id="startBtn" onclick="startCamera()">KAMERAYI BAŞLAT</button>
   <div class="specs">
     <span>v0.1</span><span>·</span><span><b>BURST</b> stack</span><span>·</span><span><b>4K</b> capture</span>
   </div>
   <div class="error-box" id="errorBox"></div>
 </div>
-
+ 
 <!-- TOPBAR -->
 <div class="topbar" id="topbar" style="display:none">
   <div class="brand">mi<span>kro</span>.</div>
@@ -240,11 +240,11 @@ body { display:flex; flex-direction:column; }
     <span><b id="fpsReadout">—</b></span>
   </div>
 </div>
-
+ 
 <!-- SIDE -->
 <div class="side-readout left" id="sideL" style="display:none">SAMPLE · OPTIC</div>
 <div class="side-readout right" id="sideR" style="display:none">FRAME · BUFFER</div>
-
+ 
 <!-- STAGE -->
 <div class="stage" id="stage" style="display:none">
   <video id="video" autoplay playsinline muted></video>
@@ -254,7 +254,7 @@ body { display:flex; flex-direction:column; }
     <span class="corner bl"></span><span class="corner br"></span>
   </div>
 </div>
-
+ 
 <!-- PANEL -->
 <div class="panel" id="panel" style="display:none">
   <div class="cam-row" id="camRow"></div>
@@ -275,17 +275,17 @@ body { display:flex; flex-direction:column; }
     <button class="aux-btn" id="focusBtn" title="Odak">◎</button>
   </div>
 </div>
-
+ 
 <!-- REVIEW -->
 <div class="review-actions hidden" id="reviewActions">
   <button class="review-btn" id="discardBtn">SİL</button>
   <button class="review-btn primary" id="saveBtn">KAYDET</button>
   <button class="review-btn" id="againBtn">YENİ ÇEKİM</button>
 </div>
-
+ 
 <div class="toast" id="toast"></div>
 <div class="flash" id="flash"></div>
-
+ 
 <script>
 const state = {
   stream:null, track:null, imageCapture:null,
@@ -294,10 +294,10 @@ const state = {
   torchOn:false, capturing:false, mode:'live',
   useTimer:false, motion:0,
 };
-
+ 
 const $ = id => document.getElementById(id);
 const video = $('video'), snapshot = $('snapshot'), stage = $('stage'), reticle = $('reticle');
-
+ 
 async function startCamera(deviceId = null) {
   $('errorBox').textContent = '';
   try {
@@ -305,7 +305,7 @@ async function startCamera(deviceId = null) {
     if (state.stream) {
       state.stream.getTracks().forEach(t => t.stop());
     }
-
+ 
     const videoConstraints = deviceId
       ? { deviceId: { exact: deviceId },
           width:{ ideal:4096 }, height:{ ideal:2160 },
@@ -313,27 +313,27 @@ async function startCamera(deviceId = null) {
       : { facingMode:{ ideal:'environment' },
           width:{ ideal:4096 }, height:{ ideal:2160 },
           frameRate:{ ideal:30 } };
-
+ 
     const stream = await navigator.mediaDevices.getUserMedia({
       audio:false, video: videoConstraints
     });
     state.stream = stream;
     state.track = stream.getVideoTracks()[0];
     video.srcObject = stream;
-
+ 
     if (typeof ImageCapture !== 'undefined') {
       try { state.imageCapture = new ImageCapture(state.track); } catch(e){}
     }
-
+ 
     $('permission').classList.add('hidden');
     ['topbar','stage','panel','sideL','sideR'].forEach(id => $(id).style.display = '');
-
+ 
     video.addEventListener('loadedmetadata', () => {
       const s = state.track.getSettings();
       $('resReadout').textContent = `${s.width||'?'}×${s.height||'?'}`;
       readTrackCaps();
     }, { once:true });
-
+ 
     if (!deviceId) {
       startFpsLoop();
       startMotionTracking();
@@ -344,17 +344,17 @@ async function startCamera(deviceId = null) {
     $('errorBox').textContent = 'Kamera erişimi başarısız: ' + err.message + '\n\nNot: tarayıcı önizlemesi kamera erişimine izin vermiyor olabilir. Bu durumda HTML dosyasını telefonunda doğrudan aç.';
   }
 }
-
+ 
 async function listCameras() {
   try {
     const devices = await navigator.mediaDevices.enumerateDevices();
     const cams = devices.filter(d => d.kind === 'videoinput');
     if (cams.length <= 1) return; // tek kamera varsa seçici göstermeye gerek yok
-
+ 
     const row = $('camRow');
     row.innerHTML = '';
     const currentId = state.track.getSettings().deviceId;
-
+ 
     cams.forEach((cam, i) => {
       const btn = document.createElement('button');
       btn.className = 'cam-chip' + (cam.deviceId === currentId ? ' active' : '');
@@ -368,7 +368,7 @@ async function listCameras() {
     console.warn('Kamera listesi alınamadı', e);
   }
 }
-
+ 
 function guessCamLabel(label, idx, total) {
   const l = (label || '').toLowerCase();
   // Yaygın etiketleri tanımaya çalış
@@ -380,7 +380,7 @@ function guessCamLabel(label, idx, total) {
   if (total === 2) return ['ANA 1×', 'GENİŞ 0.5×'][idx] || `KAM ${idx+1}`;
   return `KAM ${idx+1}`;
 }
-
+ 
 async function switchCamera(deviceId) {
   showToast('KAMERA DEĞİŞTİRİLİYOR…', true);
   await startCamera(deviceId);
@@ -391,7 +391,7 @@ async function switchCamera(deviceId) {
   await listCameras(); // yeniden çiz, doğru active state için
   hideToast();
 }
-
+ 
 function readTrackCaps() {
   if (!state.track || !state.track.getCapabilities) return;
   const caps = state.track.getCapabilities();
@@ -406,7 +406,7 @@ function readTrackCaps() {
   }
   if (!caps.focusMode) $('focusBtn').disabled = true;
 }
-
+ 
 let frames = 0, lastTime = performance.now();
 function startFpsLoop() {
   function tick() {
@@ -420,7 +420,7 @@ function startFpsLoop() {
   }
   tick();
 }
-
+ 
 // ZOOM
 $('zoomSlider').addEventListener('input', e => {
   const z = parseFloat(e.target.value);
@@ -434,14 +434,14 @@ $('zoomSlider').addEventListener('input', e => {
     video.style.transform = `scale(${z})`;
   }
 });
-
+ 
 // CENTER CROP
 $('cropChip').addEventListener('click', () => {
   state.centerCrop = !state.centerCrop;
   $('cropChip').classList.toggle('active', state.centerCrop);
   if (state.centerCrop) showToast('MERKEZ KIRPMA AÇIK\nGeniş açı lensler için');
 });
-
+ 
 // STACK SIZE
 $('stackChip').addEventListener('click', () => {
   const sizes = [1, 4, 8, 16, 24];
@@ -450,14 +450,14 @@ $('stackChip').addEventListener('click', () => {
   $('stackChip').textContent = state.stackSize === 1 ? 'TEK KARE' : `YIĞIN ×${state.stackSize}`;
   $('stackChip').classList.toggle('active', state.stackSize > 1);
 });
-
+ 
 // RETICLE
 $('gridChip').addEventListener('click', () => {
   state.showReticle = !state.showReticle;
   reticle.classList.toggle('hidden', !state.showReticle);
   $('gridChip').classList.toggle('active', state.showReticle);
 });
-
+ 
 // TORCH
 $('torchBtn').addEventListener('click', async () => {
   if (!state.track) return;
@@ -470,7 +470,7 @@ $('torchBtn').addEventListener('click', async () => {
     state.torchOn = false;
   }
 });
-
+ 
 // FOCUS LOCK — önce mevcut odağı oku, sonra kilitle
 let focusLocked = false;
 $('focusBtn').addEventListener('click', async () => {
@@ -503,7 +503,7 @@ $('focusBtn').addEventListener('click', async () => {
     $('focusBtn').classList.toggle('active', focusLocked);
   }
 });
-
+ 
 // TAP TO FOCUS POINT
 stage.addEventListener('click', async (e) => {
   if (state.mode !== 'live' || !state.track) return;
@@ -517,13 +517,13 @@ stage.addEventListener('click', async (e) => {
     });
   } catch (err) {}
 });
-
+ 
 // TIMER
 $('timerChip').addEventListener('click', () => {
   state.useTimer = !state.useTimer;
   $('timerChip').classList.toggle('active', state.useTimer);
 });
-
+ 
 // MOTION SENSOR — telefon ne kadar titriyor?
 let motionSamples = [];
 function startMotionTracking() {
@@ -555,7 +555,7 @@ function startMotionTracking() {
     }
   }
 }
-
+ 
 // Stabil olmasını bekle (ya da timeout)
 async function waitForStability(maxWaitMs = 1500, threshold = 0.25) {
   const start = performance.now();
@@ -565,15 +565,15 @@ async function waitForStability(maxWaitMs = 1500, threshold = 0.25) {
   }
   return false;
 }
-
+ 
 // SHUTTER — burst stack with timer + stability check
 $('shutter').addEventListener('click', captureBurst);
-
+ 
 async function captureBurst() {
   if (state.capturing || !state.track) return;
   state.capturing = true;
   $('shutter').classList.add('capturing');
-
+ 
   // 1) Timer geri sayımı
   if (state.useTimer) {
     for (let i = 2; i >= 1; i--) {
@@ -581,7 +581,7 @@ async function captureBurst() {
       await sleep(1000);
     }
   }
-
+ 
   // 2) Stabilite bekle
   showToast('SABİTLEN…', true);
   const stable = await waitForStability(1500, 0.3);
@@ -589,18 +589,18 @@ async function captureBurst() {
     showToast('UYARI: titreşim yüksek\nyine de çekiliyor', true);
     await sleep(600);
   }
-
+ 
   flash();
-
+ 
   const N = state.stackSize;
   const W = video.videoWidth, H = video.videoHeight;
   const sumBuf = new Float32Array(W * H * 4);
   const tempCanvas = document.createElement('canvas');
   tempCanvas.width = W; tempCanvas.height = H;
   const tctx = tempCanvas.getContext('2d', { willReadFrequently:true });
-
+ 
   showToast(`ÇEKİLİYOR · 0/${N}`, true);
-
+ 
   // Hareket eşiğini aşan kareleri AT
   let kept = 0, attempts = 0;
   const maxAttempts = N * 3;
@@ -627,18 +627,18 @@ async function captureBurst() {
     updateToast(`ÇEKİLİYOR · ${kept}/${N}`, kept, N);
     if (N > 1) await sleep(35);
   }
-
+ 
   const usedFrames = kept || 1;
-
+ 
   // average
   const out = new Uint8ClampedArray(W * H * 4);
   for (let p = 0; p < out.length; p++) out[p] = sumBuf[p] / usedFrames;
   tctx.putImageData(new ImageData(out, W, H), 0, 0);
-
+ 
   // unsharp mask
   const sharpened = unsharpMask(tctx, W, H, 0.55);
   tctx.putImageData(sharpened, 0, 0);
-
+ 
   // crop?
   let outW = W, outH = H, sx=0, sy=0, sw=W, sh=H;
   if (state.centerCrop) {
@@ -648,16 +648,16 @@ async function captureBurst() {
   }
   snapshot.width = outW; snapshot.height = outH;
   snapshot.getContext('2d').drawImage(tempCanvas, sx, sy, sw, sh, 0, 0, outW, outH);
-
+ 
   hideToast();
   if (kept < N) showToast(`${kept}/${N} kare kullanıldı`);
   enterReviewMode();
   state.capturing = false;
   $('shutter').classList.remove('capturing');
 }
-
+ 
 function sleep(ms){ return new Promise(r=>setTimeout(r, ms)); }
-
+ 
 function unsharpMask(ctx, w, h, a) {
   const src = ctx.getImageData(0, 0, w, h);
   const out = new ImageData(new Uint8ClampedArray(src.data), w, h);
@@ -677,7 +677,7 @@ function unsharpMask(ctx, w, h, a) {
   }
   return out;
 }
-
+ 
 // REVIEW MODE
 function enterReviewMode() {
   state.mode = 'review';
@@ -695,7 +695,7 @@ function exitReviewMode() {
   if (state.showReticle) reticle.classList.remove('hidden');
   snapshot.style.transform = '';
 }
-
+ 
 $('againBtn').addEventListener('click', exitReviewMode);
 $('discardBtn').addEventListener('click', exitReviewMode);
 $('saveBtn').addEventListener('click', () => {
@@ -707,7 +707,7 @@ $('saveBtn').addEventListener('click', () => {
     showToast('KAYDEDİLDİ');
   }, 'image/png');
 });
-
+ 
 function initPinchZoom() {
   let scale = 1, posX = 0, posY = 0;
   let startDist = 0, startScale = 1;
@@ -758,7 +758,7 @@ function initPinchZoom() {
     lastTap = now;
   });
 }
-
+ 
 // helpers
 let toastTimer;
 function showToast(text, sticky = false) {
@@ -778,7 +778,7 @@ function flash() {
   const f = $('flash'); f.classList.add('active');
   setTimeout(() => f.classList.remove('active'), 90);
 }
-
+ 
 document.addEventListener('DOMContentLoaded', () => {
   $('startBtn').addEventListener('click', startCamera);
   document.addEventListener('gesturestart', e => e.preventDefault());
